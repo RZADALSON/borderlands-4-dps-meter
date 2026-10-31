@@ -39,7 +39,7 @@ Full damage by default, the same as the numbers on screen, including damage over
 
 **The window**
 
-Four styles: like the game's UI (default), compact, text only and neon. You can also move it and change its size.
+Four styles: like the game's UI (default), compact, text only and neon. You can also move it and change its size. It hides while a menu is open, so close the menu to see your changes.
 
 **Language**
 

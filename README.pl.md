@@ -39,7 +39,7 @@ Domyślnie pełne obrażenia, takie jak liczby na ekranie, razem z obrażeniami 
 
 **Okienko**
 
-Cztery style: jak UI gry (domyślny), kompaktowy, sam tekst i neon. Można też zmienić miejsce i rozmiar.
+Cztery style: jak UI gry (domyślny), kompaktowy, sam tekst i neon. Można też zmienić miejsce i rozmiar. Gdy menu jest otwarte, okienko się chowa, więc efekt widać po zamknięciu menu.
 
 **Język**
 

@@ -72,7 +72,7 @@ class Pawn:
     Class = types.SimpleNamespace(Name="OakCharacter")
     def __init__(self, address, role=3): self.address, self.Role = address, role
     def _get_address(self): return self.address
-THE_PC = types.SimpleNamespace(Pawn=Pawn(0x5000))
+THE_PC = types.SimpleNamespace(Pawn=Pawn(0x5000), bShowMouseCursor=False)
 mods_base.get_pc = lambda *a, **k: THE_PC
 sdk.construct_object = lambda cls, outer=None, name=None: W(cls, outer, name)
 sdk.find_object = lambda kind, path: path
@@ -90,7 +90,7 @@ def near(label, got, want):
     check(label, abs(got - want) < 1e-6, True) if abs(got - want) < 1e-6 else check(label, got, want)
 
 mod = mods_base.mod_list.mod_list[-1]
-check("name", mod.name, "Borderlands 4 DPS Meter"); check("version", mod.version, "1.0"); check("coop", mod.coop_support.name, "ClientSide")
+check("name", mod.name, "Borderlands 4 DPS Meter"); check("version", mod.version, "1.0.1"); check("coop", mod.coop_support.name, "ClientSide")
 check("keybinds", sorted(k.identifier for k in mod.keybinds), ["Reset Meter", "Toggle Window"])
 check("reset key", next(k.key for k in mod.keybinds if k.identifier == "Reset Meter"), "F6")
 check("both hooks", sorted(h.hook_funcs[0][0] for h in mod.hooks), sorted([m.native.FUNC_PATH, "/Script/Engine.CameraModifier:BlueprintModifyCamera"]))
@@ -239,6 +239,13 @@ m.last_update = time.monotonic(); calls = len(W.made); before = m.last_bind_chec
 orig = m.check_binding; m.check_binding = lambda pc: (_ for _ in ()).throw(RuntimeError("frame boom")); Log.logs.clear(); m.errors_logged = 0; m.last_update = 0.0; m.last_bind_check = 0.0; tick(None, None, None, None); check("frame errors don't escape", any("frame boom" in l for l in Log.logs), True); m.check_binding = orig
 m.reset_meter.callback(); check("the key resets", m.damage.hits, 0)
 shown = m.show_window.value; m.toggle_window.callback(); check("the other key toggles", m.show_window.value, not shown); m.toggle_window.callback()
+m.remove_window(); m.check_window(THE_PC); widget = m.window_widget(); widget.calls.clear(); m.hide_window_in_menus(THE_PC); check("no menu, nothing touched", widget.calls, [])
+THE_PC.bShowMouseCursor = True; m.hide_window_in_menus(THE_PC); check("hidden in a menu", widget.calls[-1], ("SetVisibility", (m.COLLAPSED,))); count = len(widget.calls); m.hide_window_in_menus(THE_PC); check("only once", len(widget.calls), count)
+m.window_x.value = 80.0; m.check_window(THE_PC); m.hide_window_in_menus(THE_PC); rebuilt = m.window_widget(); check("rebuilt in a menu, still hidden", rebuilt.calls[-1], ("SetVisibility", (m.COLLAPSED,))); m.window_x.value = m.window_x.default_value; m.check_window(THE_PC); widget = m.window_widget(); m.hide_window_in_menus(THE_PC)
+THE_PC.bShowMouseCursor = False; m.hide_window_in_menus(THE_PC); check("back after the menu", widget.calls[-1], ("SetVisibility", (m.HIT_TEST_INVISIBLE,)))
+m.hide_window_in_menus(None); check("no player, no crash", m.window_hidden, False)
+for language, name in ((m.ENGLISH, "Whole fight"),):
+    m.language_option.value = language; check("default has a real name", m.how_to_count.default_value, name); m.how_to_count.value = m.how_to_count.default_value; check("default reads as unchanged", m.how_to_count.value == m.how_to_count.default_value, True); check("and is the right one", m.how_to_count.key, "fight")
 m.on_disable(); check("disable cleans up", (m.window_widget(), m.bound_address), (None, 0))
 
 # --- Language ------------------------------------------------------------------------------------

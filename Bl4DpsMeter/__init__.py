@@ -69,6 +69,7 @@ class LocalizedSpinner(SpinnerOption):
 
     labels: dict[str, Text] = {}  # noqa: RUF012
     key: str = ""
+    default_key: str = ""
     after_change: Callable[[], None] | None = None
 
     def key_for(self, value: str) -> str | None:
@@ -99,13 +100,14 @@ class LocalizedSpinner(SpinnerOption):
     def relabel(self) -> None:
         """Puts what's shown in the current language, which is no change to what's chosen."""
         self.choices = [say(text) for text in self.labels.values()]
+        self.default_value = say(self.labels[self.default_key])
         object.__setattr__(self, "value", say(self.labels[self.key]))
 
 
 def localized_spinner(identifier: str, default: str, labels: dict[str, Text]) -> LocalizedSpinner:
     """Creates a choice from its entries' keys and what they're called."""
     option = LocalizedSpinner(identifier, default, list(labels))
-    option.key = default
+    option.key = option.default_key = default
     option.labels = labels
     option.relabel()
     return option
@@ -471,6 +473,7 @@ TEXT_NOT_LISTENING: Text = ("Patch gry: licznik czeka na aktualizację", "Game p
 window_widget: WeakPointer = WeakPointer()
 window_owner: WeakPointer = WeakPointer()
 window_layout: tuple[Any, ...] = ()
+window_hidden: bool = False
 main_label: UObject | None = None
 details_label: UObject | None = None
 main_shown: str = ""
@@ -555,7 +558,7 @@ def wanted_layout() -> tuple[Any, ...]:
 
 def build_window(pc: UObject) -> None:
     """Adds the window to the screen. It never takes the mouse or any input."""
-    global window_widget, window_owner, window_layout  # noqa: PLW0603
+    global window_widget, window_owner, window_layout, window_hidden  # noqa: PLW0603
     global main_label, details_label, main_shown, details_shown  # noqa: PLW0603
 
     # A fresh name each time, reusing one from a removed widget which hasn't been collected yet
@@ -607,6 +610,7 @@ def build_window(pc: UObject) -> None:
     window_widget = WeakPointer(widget)
     window_owner = WeakPointer(pc)
     window_layout = wanted_layout()
+    window_hidden = False
 
 
 def remove_window() -> None:
@@ -654,6 +658,17 @@ def check_window(pc: UObject | None) -> None:
         build_window(pc)
 
 
+def hide_window_in_menus(pc: UObject | None) -> None:
+    """The game shows the mouse cursor while one of its menus is open, the window stays out of those."""
+    global window_hidden  # noqa: PLW0603
+
+    widget = window_widget()
+    hidden = pc is not None and bool(pc.bShowMouseCursor)
+    if widget is not None and hidden != window_hidden:
+        widget.SetVisibility(COLLAPSED if hidden else HIT_TEST_INVISIBLE)
+        window_hidden = hidden
+
+
 def log_finished_fight() -> None:
     """Notes how a fight went in the log, once it's over."""
     global fight_logged  # noqa: PLW0603
@@ -690,6 +705,7 @@ def on_tick(_obj: UObject, _args: WrappedStruct, _ret: Any, _func: BoundFunction
         if now - last_widget_check >= WIDGET_CHECK_INTERVAL:
             last_widget_check = now
             check_window(get_pc())
+        hide_window_in_menus(get_pc())
         update_window_text(now)
     except Exception as ex:  # noqa: BLE001
         log_error_once(repr(ex))
