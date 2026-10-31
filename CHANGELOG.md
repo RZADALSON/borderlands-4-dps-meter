@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0
+
+- The default style now looks like the panels on the game's HUD, slightly tilted like them.
+
 ## 1.1.0
 
 - Two ways of counting DPS instead of four: the whole fight or the last few seconds. If you had one of the removed ones, you're back on the whole fight.

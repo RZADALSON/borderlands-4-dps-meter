@@ -90,7 +90,7 @@ def near(label, got, want):
     check(label, abs(got - want) < 1e-6, True) if abs(got - want) < 1e-6 else check(label, got, want)
 
 mod = mods_base.mod_list.mod_list[-1]
-check("name", mod.name, "Borderlands 4 DPS Meter"); check("version", mod.version, "1.1"); check("coop", mod.coop_support.name, "ClientSide")
+check("name", mod.name, "Borderlands 4 DPS Meter"); check("version", mod.version, "1.2"); check("coop", mod.coop_support.name, "ClientSide")
 check("keybinds", sorted(k.identifier for k in mod.keybinds), ["Reset Meter"])
 check("reset key", next(k.key for k in mod.keybinds if k.identifier == "Reset Meter"), "F6")
 check("both hooks", sorted(h.hook_funcs[0][0] for h in mod.hooks), sorted([m.native.FUNC_PATH, "/Script/Engine.CameraModifier:BlueprintModifyCamera"]))
@@ -185,11 +185,11 @@ check("stays inside the screen", dict(place.calls)["SetAlignment"][0], anchors.M
 count = len(W.made); m.check_window(THE_PC); check("not built twice", len(W.made), count)
 m.damage.clear(); m.damage.last_fight = None; m.update_window_text(0.0)
 said = lambda label: [c[1][0] for c in label.calls if c[0] == "SetText"]
-check("main line", said(m.main_label)[-1], "DPS 0"); check("details", said(m.details_label)[-1], "RAZEM 0 | CZAS 00:00\nKRYTYKI 0% | NAJLEPSZE 0 | ZABÓJSTWA 0")
+check("main line", said(m.main_label)[-1], "0"); check("details", said(m.details_label)[-1], "RAZEM 0 | CZAS 00:00\nKRYTYKI 0% | NAJLEPSZE 0 | ZABÓJSTWA 0")
 before = len(m.main_label.calls); m.update_window_text(0.0); check("no needless updates", len(m.main_label.calls), before)
 m.damage.mode = meter.MODE_FIGHT; m.damage.add(0.0, 5000.0, crit=True, kill=True); m.damage.add(2.0, 15000.0); m.update_window_text(2.0)
-check("numbers show", said(m.main_label)[-1], "DPS 10.0K"); check("details show", said(m.details_label)[-1], "RAZEM 20.0K | CZAS 00:02\nKRYTYKI 25% | NAJLEPSZE 15.0K | ZABÓJSTWA 1")
-m.damage.reset(); m.update_window_text(3.0); check("after a reset", said(m.main_label)[-1], "DPS 0"); check("last fight stays", said(m.details_label)[-1].split("\n")[-1], "OSTATNIA WALKA: 10.0K DPS | 20.0K | 00:02")
+check("numbers show", said(m.main_label)[-1], "10.0K"); check("details show", said(m.details_label)[-1], "RAZEM 20.0K | CZAS 00:02\nKRYTYKI 25% | NAJLEPSZE 15.0K | ZABÓJSTWA 1")
+m.damage.reset(); m.update_window_text(3.0); check("after a reset", said(m.main_label)[-1], "0"); check("last fight stays", said(m.details_label)[-1].split("\n")[-1], "OSTATNIA WALKA: 10.0K DPS | 20.0K | 00:02")
 m.language_option.value = m.ENGLISH; m.update_window_text(3.0); check("English", said(m.details_label)[-1].split("\n")[-1], "LAST FIGHT: 10.0K DPS | 20.0K | 00:02")
 m.show_last_fight.value = False; m.update_window_text(3.0); check("last fight can go", "LAST FIGHT" in said(m.details_label)[-1], False); m.show_last_fight.value = True
 m.show_details.value = False; m.show_last_fight.value = False; m.listen_failed = False; m.is_guest = False; m.update_window_text(3.0); check("details off, hidden", (said(m.details_label)[-1], dict(m.details_label.calls)["SetVisibility"]), ("", (m.COLLAPSED,)))
@@ -216,7 +216,9 @@ m.damage.clear(); m.damage.last_fight = None
 got = build(m.STYLE_COMPACT); check("changing style rebuilds", got.built, True); check("compact has no line", len(got.colors), 1); check("compact on one line", m.details_text(0.0), "RAZEM 0 | CZAS 00:00 | KRYTYKI 0% | NAJLEPSZE 0 | ZABÓJSTWA 0" if m.shown_language == "pl" else "TOTAL 0 | TIME 00:00 | CRITS 0% | BEST 0 | KILLS 0")
 got = build(m.STYLE_MINIMAL); check("text only has a clear background", got.colors[0].A, 0.0); check("and a shadow on both texts", got.shadows, 2); check("not in capitals", m.details_text(0.0).split(" ")[0] in ("Razem", "Total"), True)
 got = build(m.STYLE_NEON); check("neon has a line", len(got.colors), 2); check("neon main colour", got.main.G, m.GAME_CYAN[1]); check("neon has no shadow", got.shadows, 0)
-got = build(m.STYLE_GAME); check("game has a line, in the game's orange", got.colors[1].R, m.GAME_ORANGE[0]); check("on the game's dark", got.colors[0].A, m.GAME_DARK[3]); check("game has no shadow", got.shadows, 0)
+got = build(m.STYLE_GAME); check("game has orange ends", got.colors.count(next(c for c in got.colors if c.R == m.GAME_ORANGE[0])) >= 1, True); check("on the HUD's blue", any(c.A == m.HUD_PANEL[3] for c in got.colors), True); check("game has no shadow", got.shadows, 0)
+def shear(): return next(a[0].Y for w in W.made for n, a in w.calls if n == "SetRenderShear")
+check("leans down on the right", shear(), m.HUD_TILT); W.made.clear(); m.window_x.value = 10.0; m.check_window(THE_PC); check("and up on the left", shear(), -m.HUD_TILT); m.window_x.value = m.window_x.default_value; m.check_window(THE_PC)
 W.made.clear(); m.check_window(THE_PC); check("same style, not rebuilt", W.made, [])
 m.window_style.value = "Sam tekst"; check("style by its text", m.window_style.key, m.STYLE_MINIMAL); m.language_option.value = m.ENGLISH; check("reads in English", m.window_style.value, "Text only"); m.window_style.value = m.STYLE_GAME; check("default again", m.window_style.value, "Like the game")
 

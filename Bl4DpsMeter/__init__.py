@@ -401,6 +401,9 @@ DETAILS_FONT_RATIO = 0.65
 GAME_FONT = "/Game/Fonts/Industry.Industry"
 GAME_TYPEFACE = "Bold"
 HIT_TEST_INVISIBLE = 3
+ALIGN_FILL = 0  # EVerticalAlignment
+ALIGN_CENTER = 2
+SIZE_RULE_FILL = 1  # ESlateSizeRule
 COLLAPSED = 1
 SHADOW_COLOR = (0.0, 0.0, 0.0, 0.9)
 SHADOW_OFFSET = 1.5
@@ -428,6 +431,7 @@ class WindowStyle:
     capitals: bool = False
     one_line: bool = False
     shadow: bool = False
+    panel: bool = False  # Built like the game's own HUD panels, slightly tilted
 
 
 # The game's interface colours, as the Carnage Report takes them from its stylesheets
@@ -437,8 +441,18 @@ GAME_LIGHT_ORANGE = linear("#ffb55c")
 GAME_TEXT = linear("#e4d9ce")
 GAME_CYAN = linear("#00c6ff")
 WHITE = linear("#ffffff")
+# Picked from the health and ammo panels on the HUD
+HUD_PANEL = linear("#0a324b", 0.82)
+HUD_TILE = linear("#0f5a70", 0.92)
+HUD_EDGE = linear("#aebfc8")
+HUD_CYAN = linear("#39e3ea")
+HUD_NUMBER = linear("#f0e8dc")
+HUD_DETAILS = linear("#b4c8d2")
+HUD_TILT = 4.0  # Degrees, about what those panels lean by
+HUD_TICK_LENGTH = 18.0
+HUD_LINE_WIDTH = 2.0
 WINDOW_STYLES = {
-    STYLE_GAME: WindowStyle(GAME_DARK, GAME_ORANGE, GAME_LIGHT_ORANGE, GAME_TEXT, capitals=True),
+    STYLE_GAME: WindowStyle(None, None, HUD_NUMBER, HUD_DETAILS, capitals=True, panel=True),
     STYLE_COMPACT: WindowStyle(GAME_DARK, None, GAME_LIGHT_ORANGE, GAME_TEXT, capitals=True, one_line=True),
     STYLE_MINIMAL: WindowStyle(None, None, WHITE, GAME_TEXT, shadow=True),
     STYLE_NEON: WindowStyle((0.0, 0.0, 0.0, 0.7), GAME_CYAN, GAME_CYAN, WHITE),
@@ -471,7 +485,8 @@ def current_style() -> WindowStyle:
 
 def main_text(now: float) -> str:
     """Gets the big line of the window."""
-    return f"DPS {meter.format_number(damage.dps(now))}"
+    number = meter.format_number(damage.dps(now))
+    return number if current_style().panel else f"DPS {number}"
 
 
 def details_text(now: float) -> str:
@@ -539,6 +554,69 @@ def wanted_layout() -> tuple[Any, ...]:
     return (window_style.key, *(float(option.value) for option in RELOAD_OPTIONS))
 
 
+def new_line(tree: UObject, color: tuple[float, float, float, float], length: float = 1.0) -> UObject:
+    """Creates a thin coloured line."""
+    line = new_widget("/Script/UMG.Border", tree)
+    line.SetBrushColor(linear_color(color))
+    line.SetPadding(make_struct("Margin", Left=0.0, Top=0.0, Right=0.0, Bottom=0.0))
+    spacer = new_widget("/Script/UMG.Spacer", tree)
+    spacer.SetSize(make_struct("Vector2D", X=length, Y=HUD_LINE_WIDTH))
+    line.SetContent(spacer)
+    return line
+
+
+def fill_width(widget: UObject) -> None:
+    """Makes something in a horizontal box take up the space that's left."""
+    widget.Slot.SetSize(make_struct("SlateChildSize", Value=1.0, SizeRule=SIZE_RULE_FILL))
+
+
+def new_panel_edge(tree: UObject, tick_on_left: bool) -> UObject:
+    """Creates the line along a panel's top or bottom, with its short orange end on the inner side."""
+    edge = new_widget("/Script/UMG.HorizontalBox", tree)
+    tick = new_line(tree, GAME_ORANGE, HUD_TICK_LENGTH)
+    line = new_line(tree, HUD_EDGE)
+    edge.AddChild(tick if tick_on_left else line)
+    edge.AddChild(line if tick_on_left else tick)
+    fill_width(line)
+    return edge
+
+
+def build_panel(tree: UObject, column: UObject, style: WindowStyle, on_right: bool) -> tuple[UObject, UObject]:
+    """Lays the window out like the game's HUD panels. Returns its main and details texts."""
+    column.AddChild(new_panel_edge(tree, on_right))
+
+    row = new_widget("/Script/UMG.HorizontalBox", tree)
+    column.AddChild(row)
+    row.Slot.SetPadding(make_struct("Margin", Left=0.0, Top=3.0, Right=0.0, Bottom=3.0))
+
+    details_size = max(8, int(font_size.value * DETAILS_FONT_RATIO))
+    tile = new_widget("/Script/UMG.Border", tree)
+    tile.SetBrushColor(linear_color(HUD_TILE))
+    tile.SetPadding(make_struct("Margin", Left=10.0, Top=4.0, Right=10.0, Bottom=4.0))
+    tile.SetVerticalAlignment(ALIGN_CENTER)
+    title = new_text(tree, details_size, HUD_CYAN, style.shadow)
+    title.SetText("DPS")
+    tile.SetContent(title)
+    row.AddChild(tile)
+    tile.Slot.SetPadding(make_struct("Margin", Left=0.0, Top=0.0, Right=3.0, Bottom=0.0))
+    tile.Slot.SetVerticalAlignment(ALIGN_FILL)
+
+    values = new_widget("/Script/UMG.Border", tree)
+    values.SetBrushColor(linear_color(HUD_PANEL))
+    values.SetPadding(make_struct("Margin", Left=12.0, Top=2.0, Right=14.0, Bottom=5.0))
+    row.AddChild(values)
+    fill_width(values)
+    stack = new_widget("/Script/UMG.VerticalBox", tree)
+    values.SetContent(stack)
+    main = new_text(tree, int(font_size.value), style.main, style.shadow)
+    stack.AddChild(main)
+    details = new_text(tree, details_size, style.details, style.shadow)
+    stack.AddChild(details)
+
+    column.AddChild(new_panel_edge(tree, on_right))
+    return main, details
+
+
 def build_window(pc: UObject) -> None:
     """Adds the window to the screen. It never takes the mouse or any input."""
     global window_widget, window_owner, window_layout, window_hidden  # noqa: PLW0603
@@ -556,7 +634,8 @@ def build_window(pc: UObject) -> None:
     style = current_style()
     box = new_widget("/Script/UMG.Border", tree)
     box.SetBrushColor(linear_color(style.background or (0.0, 0.0, 0.0, 0.0)))
-    box.SetPadding(make_struct("Margin", Left=12.0, Top=6.0, Right=12.0, Bottom=7.0))
+    padding = 0.0 if style.panel else 1.0
+    box.SetPadding(make_struct("Margin", Left=12.0 * padding, Top=6.0 * padding, Right=12.0 * padding, Bottom=7.0 * padding))
     box.SetVisibility(HIT_TEST_INVISIBLE)
     canvas.AddChild(box)
 
@@ -571,7 +650,13 @@ def build_window(pc: UObject) -> None:
     column = new_widget("/Script/UMG.VerticalBox", tree)
     box.SetContent(column)
 
-    # A thin line along the top, like the game's own panels
+    # They lean away from the middle of the screen on either side
+    if style.panel:
+        on_right = window_x.value >= 50.0  # noqa: PLR2004
+        box.SetRenderShear(make_struct("Vector2D", X=0.0, Y=HUD_TILT if on_right else -HUD_TILT))
+        main_label, details_label = build_panel(tree, column, style, on_right)
+
+    # A thin line along the top
     if style.accent is not None:
         accent = new_widget("/Script/UMG.Border", tree)
         accent.SetBrushColor(linear_color(style.accent))
@@ -581,11 +666,12 @@ def build_window(pc: UObject) -> None:
         spacer.SetSize(make_struct("Vector2D", X=1.0, Y=2.0))
         accent.SetContent(spacer)
 
-    main_label = new_text(tree, int(font_size.value), style.main, style.shadow)
-    column.AddChild(main_label)
-    details_size = max(8, int(font_size.value * DETAILS_FONT_RATIO))
-    details_label = new_text(tree, details_size, style.details, style.shadow)
-    column.AddChild(details_label)
+    if not style.panel:
+        main_label = new_text(tree, int(font_size.value), style.main, style.shadow)
+        column.AddChild(main_label)
+        details_size = max(8, int(font_size.value * DETAILS_FONT_RATIO))
+        details_label = new_text(tree, details_size, style.details, style.shadow)
+        column.AddChild(details_label)
     main_shown = details_shown = ""
 
     widget.SetVisibility(HIT_TEST_INVISIBLE)
