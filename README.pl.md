@@ -22,28 +22,17 @@ F6 resetuje licznik, F7 otwiera ustawienia.
 
 ## Ustawienia
 
-**Jak liczyć DPS**
+**Liczenie DPS:** cała walka, czyli wszystkie obrażenia podzielone przez czas od pierwszego do ostatniego trafienia, albo tylko ostatnie sekundy (od 1 do 60).
 
-- Cała walka (domyślnie): obrażenia przez czas od pierwszego do ostatniego trafienia.
-- Cała walka z przerwami: czas biegnie dalej, więc DPS spada, gdy nie trafiasz.
-- Tylko czas trafiania: przerwy dłuższe niż sekunda się nie liczą.
-- Ostatnie sekundy: tylko obrażenia z ostatnich 1 do 60 sekund.
+**Reset licznika:** domyślnie licznik zeruje się 5 sekund po ostatnim trafieniu. Można to ustawić od 1 do 60 sekund albo resetować tylko klawiszem F6. Gra nie jest pytana, czy wrogowie są w pobliżu, liczy się tylko to, kiedy kogoś ostatnio trafiłeś.
 
-**Kiedy resetować**
+**Obrażenia w czasie** i **obrażenia towarzyszy** są domyślnie liczone. Każde z nich można wyłączyć.
 
-Domyślnie po 5 sekundach bez trafienia wroga. Można to ustawić od 1 do 60 sekund albo resetować tylko ręcznie. „Poza walką” znaczy tylko tyle, że przez ten czas nikogo nie trafiłeś. Gra nie jest pytana, czy wrogowie są w pobliżu.
+**Wygląd licznika:** cztery style (domyślnie jak UI gry, kompaktowy, sam tekst i neon), co pokazuje, gdzie stoi i jak jest duży. Gdy menu jest otwarte, licznik się chowa, więc efekt widać po zamknięciu menu.
 
-**Co się liczy**
+Ustawienia, które przy Twoim wyborze nic nie zmieniają, są wyszarzone.
 
-Domyślnie pełne obrażenia, takie jak liczby na ekranie, razem z obrażeniami w czasie i od towarzyszy. Każde z tych dwóch można wyłączyć. `Tylko zabrane zdrowie` liczy tylko zdrowie, które wróg naprawdę stracił, więc manekin bez zdrowia liczy się prawie wcale.
-
-**Okienko**
-
-Cztery style: jak UI gry (domyślny), kompaktowy, sam tekst i neon. Można też zmienić miejsce i rozmiar. Gdy menu jest otwarte, okienko się chowa, więc efekt widać po zamknięciu menu.
-
-**Język**
-
-Polski lub angielski, według języka gry w Steamie. Wybór w menu zostaje zapisany. Na Epicu start jest po angielsku.
+**Język:** polski lub angielski, według języka gry w Steamie. Wybór w menu zostaje zapisany. Na Epicu start jest po angielsku.
 
 ## Ograniczenia
 

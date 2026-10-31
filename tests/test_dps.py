@@ -90,14 +90,14 @@ def near(label, got, want):
     check(label, abs(got - want) < 1e-6, True) if abs(got - want) < 1e-6 else check(label, got, want)
 
 mod = mods_base.mod_list.mod_list[-1]
-check("name", mod.name, "Borderlands 4 DPS Meter"); check("version", mod.version, "1.0.1"); check("coop", mod.coop_support.name, "ClientSide")
-check("keybinds", sorted(k.identifier for k in mod.keybinds), ["Reset Meter", "Toggle Window"])
+check("name", mod.name, "Borderlands 4 DPS Meter"); check("version", mod.version, "1.1"); check("coop", mod.coop_support.name, "ClientSide")
+check("keybinds", sorted(k.identifier for k in mod.keybinds), ["Reset Meter"])
 check("reset key", next(k.key for k in mod.keybinds if k.identifier == "Reset Meter"), "F6")
 check("both hooks", sorted(h.hook_funcs[0][0] for h in mod.hooks), sorted([m.native.FUNC_PATH, "/Script/Engine.CameraModifier:BlueprintModifyCamera"]))
 
 # --- Defaults: only resets after 5 seconds out of combat ------------------------------------------
 check("counts the whole fight", m.how_to_count.key, meter.MODE_FIGHT); check("resets out of combat", m.when_to_reset.key, m.RESET_AFTER_IDLE); check("after 5 s", m.reset_seconds.value, 5.0)
-check("full damage", m.only_health_removed.value, False); check("dot on", m.count_over_time.value, True); check("companions on", m.count_companions.value, True)
+check("dot on", m.count_over_time.value, True); check("companions on", m.count_companions.value, True)
 
 # --- The counting --------------------------------------------------------------------------------
 M = meter.Meter()
@@ -115,13 +115,7 @@ M = meter.Meter(); M.reset_after = None; M.add(0.0, 100.0); M.tick(1e6); check("
 M = meter.Meter(); M.reset(); check("resetting nothing keeps no fight", M.last_fight, None)
 M.add(0.0, 10.0); M.reset(); M.reset(); check("a second reset keeps the last fight", M.last_fight.total, 10.0)
 
-M = meter.Meter(); M.mode = meter.MODE_CLOCK; M.add(0.0, 1000.0); M.add(2.0, 1000.0)
-near("clock while hitting", M.dps(2.0), 1000.0); near("falls during a pause", M.dps(4.0), 500.0)
-check("clock's fight ends at the last hit", M.summary().duration, 2.0)
 
-M = meter.Meter(); M.mode = meter.MODE_ACTIVE; M.add(0.0, 100.0); M.add(0.5, 100.0); M.add(10.5, 100.0)
-near("pause counts only up to a second", M.duration(10.5), 1.5); near("active dps", M.dps(10.5), 200.0); near("and doesn't fall after", M.dps(14.0), 200.0)
-check("active summary", M.summary().duration, 1.5)
 
 M = meter.Meter(); M.mode = meter.MODE_WINDOW; M.window = 5.0; M.add(0.0, 1000.0); near("window before it's full", M.dps(0.0), 1000.0)
 M.add(2.0, 1000.0); near("window part full", M.dps(2.0), 1000.0); M.add(4.0, 1000.0)
@@ -152,7 +146,6 @@ check("leaves the game's own calls", hit(on=0x999), None); check("not counted", 
 m.damage.clear(); hit(attitude=1); check("friendly doesn't count", m.damage.hits, 0)
 hit(amount=float("nan")); hit(amount=0.0); check("nothing to count", m.damage.hits, 0)
 hit(amount=456686.0, over=456685.0); check("a dummy with no health left counts in full, as seen in game", m.damage.total, 456686.0)
-m.damage.clear(); m.only_health_removed.value = True; hit(amount=100.0, over=30.0); check("only health if asked", m.damage.total, 70.0); hit(amount=100.0, over=100.0); check("all overkill counts as nothing then", m.damage.hits, 1); m.only_health_removed.value = False
 m.damage.clear(); hit(flags_byte=1); hit(flags_byte=4); check("crit and kill", (m.damage.crit, m.damage.kills), (100.0, 1))
 m.damage.clear(); m.count_over_time.value = False; hit(flags_byte=2); check("dot by flag left out", m.damage.hits, 0); hit(type_name="Fire_Status"); check("dot by name left out", m.damage.hits, 0); hit(type_name="Shock"); check("direct still counts", m.damage.hits, 1); m.count_over_time.value = True
 hit(flags_byte=2); check("dot counts by default", m.damage.hits, 2)
@@ -238,7 +231,6 @@ m.damage.add(now - 1.0, 100.0); m.last_update = 0.0; tick(None, None, None, None
 m.last_update = time.monotonic(); calls = len(W.made); before = m.last_bind_check; tick(None, None, None, None); check("does nothing between updates", m.last_bind_check, before)
 orig = m.check_binding; m.check_binding = lambda pc: (_ for _ in ()).throw(RuntimeError("frame boom")); Log.logs.clear(); m.errors_logged = 0; m.last_update = 0.0; m.last_bind_check = 0.0; tick(None, None, None, None); check("frame errors don't escape", any("frame boom" in l for l in Log.logs), True); m.check_binding = orig
 m.reset_meter.callback(); check("the key resets", m.damage.hits, 0)
-shown = m.show_window.value; m.toggle_window.callback(); check("the other key toggles", m.show_window.value, not shown); m.toggle_window.callback()
 m.remove_window(); m.check_window(THE_PC); widget = m.window_widget(); widget.calls.clear(); m.hide_window_in_menus(THE_PC); check("no menu, nothing touched", widget.calls, [])
 THE_PC.bShowMouseCursor = True; m.hide_window_in_menus(THE_PC); check("hidden in a menu", widget.calls[-1], ("SetVisibility", (m.COLLAPSED,))); count = len(widget.calls); m.hide_window_in_menus(THE_PC); check("only once", len(widget.calls), count)
 m.window_x.value = 80.0; m.check_window(THE_PC); m.hide_window_in_menus(THE_PC); rebuilt = m.window_widget(); check("rebuilt in a menu, still hidden", rebuilt.calls[-1], ("SetVisibility", (m.COLLAPSED,))); m.window_x.value = m.window_x.default_value; m.check_window(THE_PC); widget = m.window_widget(); m.hide_window_in_menus(THE_PC)
@@ -253,25 +245,29 @@ def walk(options):
     for option in options:
         yield option
         yield from walk(getattr(option, "children", ()))
-m.game_language = lambda: m.POLISH; m.language_option.value = m.LANGUAGE_AUTO; check("follows the game", (m.shown_language, m.how_to_count.value, m.how_to_count.display_name), ("pl", "Cała walka", "Jak liczyć DPS"))
-m.game_language = lambda: m.ENGLISH; m.apply_language(); check("in English", (m.shown_language, m.how_to_count.value, m.how_to_count.display_name), ("en", "Whole fight", "How to count DPS"))
+m.game_language = lambda: m.POLISH; m.language_option.value = m.LANGUAGE_AUTO; check("follows the game", (m.shown_language, m.how_to_count.value, m.how_to_count.display_name), ("pl", "Cała walka", "Liczenie DPS"))
+m.game_language = lambda: m.ENGLISH; m.apply_language(); check("in English", (m.shown_language, m.how_to_count.value, m.how_to_count.display_name), ("en", "Whole fight", "DPS calculation"))
 m.game_language = lambda: m.POLISH; m.language_option.value = m.ENGLISH; check("a choice wins", m.shown_language, "en")
 letters = set("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ"); left = [o.display_name for o in [*walk(mod.options), *mod.keybinds] if letters & set(o.display_name + (o.description or "")) and o is not m.language_option]; check("no Polish left in English", left, [])
-m.how_to_count.value = meter.MODE_CLOCK; m.language_option.value = m.POLISH; check("choice survives the language", (m.how_to_count.key, m.how_to_count.value), (meter.MODE_CLOCK, "Cała walka z przerwami"))
+m.how_to_count.value = meter.MODE_WINDOW; m.language_option.value = m.POLISH; check("choice survives the language", (m.how_to_count.key, m.how_to_count.value), (meter.MODE_WINDOW, "Ostatnie sekundy"))
 m.how_to_count.value = "Last few seconds"; check("text in the other language", m.how_to_count.key, meter.MODE_WINDOW)
 steam_dir = Path(tempfile.mkdtemp()); game_dir = steam_dir / "common" / "Borderlands 4"; game_dir.mkdir(parents=True); check("no manifest", m.steam_language(game_dir), None)
 (steam_dir / f"appmanifest_{m.STEAM_APP_ID}.acf").write_text('"AppState"\n{\n\t"UserConfig"\n\t{\n\t\t"language"\t\t"polish"\n\t}\n}\n', encoding="utf8"); check("reads Steam's setting", m.steam_language(game_dir), "polish"); shutil.rmtree(steam_dir, ignore_errors=True)
 
 # --- Settings, through the real code and a real file -----------------------------------------------
-m.language_option.value = m.ENGLISH; m.how_to_count.value = meter.MODE_ACTIVE; m.when_to_reset.value = m.RESET_BY_HAND; m.reset_seconds.value = 12.0; mod.save_settings()
+m.language_option.value = m.ENGLISH; m.how_to_count.value = meter.MODE_WINDOW; m.when_to_reset.value = m.RESET_BY_HAND; m.reset_seconds.value = 12.0; mod.save_settings()
 disk = json.loads(Path(mod.settings_file).read_text(encoding="utf8"))
 def saved(tree, name):
     if name in tree: return tree[name]
     return next((v for v in (saved(c, name) for c in tree.values() if isinstance(c, dict)) if v is not None), None)
-check("saved by meaning", (saved(disk, "Language"), saved(disk, "How To Count"), saved(disk, "When To Reset")), (m.ENGLISH, meter.MODE_ACTIVE, m.RESET_BY_HAND))
+check("saved by meaning", (saved(disk, "Language"), saved(disk, "How To Count"), saved(disk, "When To Reset")), (m.ENGLISH, meter.MODE_WINDOW, m.RESET_BY_HAND))
 m.language_option.value = m.POLISH; m.how_to_count.value = meter.MODE_FIGHT; m.when_to_reset.value = m.RESET_AFTER_IDLE; m.reset_seconds.value = 5.0; mod.load_settings()
-check("loaded back", (m.language_option.key, m.shown_language, m.how_to_count.key, m.how_to_count.value, m.when_to_reset.key, m.reset_seconds.value), (m.ENGLISH, "en", meter.MODE_ACTIVE, "Only time spent hitting", m.RESET_BY_HAND, 12.0))
-m.how_to_count._from_json("rubbish"); check("nonsense changes nothing", m.how_to_count.key, meter.MODE_ACTIVE)
+check("loaded back", (m.language_option.key, m.shown_language, m.how_to_count.key, m.how_to_count.value, m.when_to_reset.key, m.reset_seconds.value), (m.ENGLISH, "en", meter.MODE_WINDOW, "Last few seconds", m.RESET_BY_HAND, 12.0))
+m.how_to_count._from_json("rubbish"); check("nonsense changes nothing", m.how_to_count.key, meter.MODE_WINDOW)
+m.how_to_count._from_json("clock"); check("a removed way of counting changes nothing", m.how_to_count.key, meter.MODE_WINDOW); m.how_to_count._from_json("active"); check("nor the other one", m.how_to_count.key, meter.MODE_WINDOW)
+m.how_to_count.value = meter.MODE_FIGHT; check("seconds grey with the whole fight", m.window_seconds.greyed_when(), True); m.how_to_count.value = meter.MODE_WINDOW; check("not with the last seconds", m.window_seconds.greyed_when(), False); m.how_to_count.value = meter.MODE_FIGHT
+m.when_to_reset.value = m.RESET_BY_HAND; check("reset time grey by hand", m.reset_seconds.greyed_when(), True); m.when_to_reset.value = m.RESET_AFTER_IDLE; check("not when automatic", m.reset_seconds.greyed_when(), False)
+m.show_window.value = False; check("window settings grey when hidden", all(o.greyed_when() for o in m.WINDOW_OPTIONS), True); m.show_window.value = True; check("and back", any(o.greyed_when() for o in m.WINDOW_OPTIONS), False); check("the switch itself never greys", hasattr(m.show_window, "greyed_when"), False)
 
 shutil.rmtree(tmp, ignore_errors=True)
 print("FAILS:", fails)

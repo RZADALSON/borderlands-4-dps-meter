@@ -22,28 +22,17 @@ F6 resets it. F7 opens the settings.
 
 ## Settings
 
-**How DPS is counted**
+**DPS calculation:** either the whole fight, which is all your damage divided by the time from your first hit to your last, or only the last few seconds (1 to 60).
 
-- Whole fight (default): damage divided by the time from your first hit to your last.
-- Whole fight with pauses: the clock keeps running, so the number drops when you stop hitting things.
-- Only time spent hitting: gaps longer than a second don't count.
-- Last few seconds: only the damage from the last 1 to 60 seconds.
+**Meter reset:** by default it goes back to zero 5 seconds after your last hit. You can set that from 1 to 60 seconds, or only reset it with F6. The game isn't asked if enemies are nearby, all that matters is when you last hit one.
 
-**When it resets**
+**Damage over time** and **companion damage** count by default. You can turn off either one.
 
-By default, after 5 seconds without hitting an enemy. You can set that from 1 to 60 seconds, or only reset it yourself. "Out of combat" only means you haven't hit anything for that long. The game isn't asked if enemies are nearby.
+**Meter display:** four styles (like the game's UI by default, compact, text only and neon), what it shows, where it sits and how big it is. It hides while a menu is open, so close the menu to see your changes.
 
-**What counts**
+Settings that don't do anything with your current choices are greyed out.
 
-Full damage by default, the same as the numbers on screen, including damage over time and companions. Each of those can be turned off. `Only health removed` counts just the health an enemy really lost. With it on, a training dummy that has run out of health counts as next to nothing.
-
-**The window**
-
-Four styles: like the game's UI (default), compact, text only and neon. You can also move it and change its size. It hides while a menu is open, so close the menu to see your changes.
-
-**Language**
-
-Polish or English, following the language Steam runs the game in. If you pick one in the menu, that's saved. On Epic it starts in English.
+**Language:** Polish or English, following the language Steam runs the game in. If you pick one in the menu, that's saved. On Epic it starts in English.
 
 ## Limits
 

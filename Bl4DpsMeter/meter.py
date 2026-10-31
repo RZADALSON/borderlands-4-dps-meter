@@ -7,14 +7,10 @@ from dataclasses import dataclass
 
 # How damage per second gets worked out
 MODE_FIGHT = "fight"  # All of it, over the time from the first hit to the last
-MODE_CLOCK = "clock"  # All of it, over the time since the first hit, so it falls while you're not hitting
-MODE_ACTIVE = "active"  # All of it, over only the time you were hitting something
 MODE_WINDOW = "window"  # Only the last few seconds
 
 # A single hit has no length, this stops it counting as a huge DPS
 MIN_DURATION = 1.0
-# With MODE_ACTIVE, a longer gap than this between hits only counts for this long
-ACTIVE_GAP = 1.0
 
 
 @dataclass
@@ -46,15 +42,12 @@ class Meter:
         self.biggest = 0.0
         self.first = 0.0
         self.last = 0.0
-        self.active_time = 0.0
         self.recent: deque[tuple[float, float]] = deque()
 
     def add(self, now: float, damage: float, crit: bool = False, kill: bool = False) -> None:
         """Counts one hit."""
         if not self.hits:
             self.first = now
-        else:
-            self.active_time += min(now - self.last, ACTIVE_GAP)
         self.last = now
         self.hits += 1
         self.total += damage
@@ -73,10 +66,6 @@ class Meter:
         """Gets how long the fight has lasted, the way the current mode sees it."""
         if not self.hits:
             return 0.0
-        if self.mode == MODE_CLOCK:
-            return now - self.first
-        if self.mode == MODE_ACTIVE:
-            return self.active_time
         if self.mode == MODE_WINDOW:
             return min(now - self.first, self.window)
         return self.last - self.first
@@ -92,10 +81,7 @@ class Meter:
 
     def summary(self) -> FightSummary:
         """Sums up the fight as of its last hit. The time since then wasn't part of the fight."""
-        if self.mode == MODE_ACTIVE:
-            duration = self.active_time
-        else:
-            duration = self.last - self.first
+        duration = self.last - self.first
         return FightSummary(self.total / max(duration, MIN_DURATION), self.total, duration)
 
     def tick(self, now: float) -> None:

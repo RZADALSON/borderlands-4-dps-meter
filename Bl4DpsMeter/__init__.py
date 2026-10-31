@@ -24,7 +24,6 @@ from mods_base import (
     MODS_DIR,
     BaseOption,
     BoolOption,
-    ButtonOption,
     NestedOption,
     SliderOption,
     SpinnerOption,
@@ -139,102 +138,87 @@ how_to_count = label(
         meter.MODE_FIGHT,
         {
             meter.MODE_FIGHT: ("Cała walka", "Whole fight"),
-            meter.MODE_CLOCK: ("Cała walka z przerwami", "Whole fight with pauses"),
-            meter.MODE_ACTIVE: ("Tylko czas trafiania", "Only time spent hitting"),
             meter.MODE_WINDOW: ("Ostatnie sekundy", "Last few seconds"),
         },
     ),
-    ("Jak liczyć DPS", "How to count DPS"),
+    ("Liczenie DPS", "DPS calculation"),
     (
-        "Cała walka: obrażenia dzielone przez czas od pierwszego do ostatniego trafienia."
-        " Z przerwami: czas biegnie dalej, więc DPS spada, gdy nie trafiasz."
-        " Tylko czas trafiania: przerwy dłuższe niż sekunda się nie liczą."
-        " Ostatnie sekundy: tylko obrażenia z wybranej liczby ostatnich sekund.",
-        "Whole fight: damage over the time from the first hit to the last."
-        " With pauses: the clock keeps running, so DPS falls while you're not hitting."
-        " Only time spent hitting: pauses longer than a second don't count."
-        " Last few seconds: only the damage from the chosen number of last seconds.",
+        "Cała walka: wszystkie obrażenia podzielone przez czas od pierwszego do ostatniego trafienia."
+        " Ostatnie sekundy: tylko obrażenia z ostatnich kilku sekund, więc od razu widać zmianę broni albo buffa.",
+        "Whole fight: all your damage divided by the time from your first hit to your last."
+        " Last few seconds: only the damage from the last few seconds, so a new weapon or buff shows up right away.",
     ),
 )
 window_seconds = label(
     SliderOption(identifier="Window Seconds", value=5.0, min_value=1.0, max_value=60.0, step=1.0, is_integer=False),
-    ("Ile ostatnich sekund", "How many last seconds"),
-    ("Działa, gdy wybrany jest sposób Ostatnie sekundy.", "Works while counting by Last few seconds."),
+    ("Liczba sekund", "Number of seconds"),
+    ("Z ilu ostatnich sekund liczyć DPS.", "How many seconds back to count."),
 )
+window_seconds.greyed_when = lambda: how_to_count.key != meter.MODE_WINDOW
 when_to_reset = label(
     localized_spinner(
         "When To Reset",
         RESET_AFTER_IDLE,
         {
-            RESET_AFTER_IDLE: ("Po wyjściu z walki", "After leaving combat"),
-            RESET_BY_HAND: ("Tylko ręcznie", "Only by hand"),
+            RESET_AFTER_IDLE: ("Automatyczny", "Automatic"),
+            RESET_BY_HAND: ("Tylko klawiszem", "Only with the key"),
         },
     ),
-    ("Kiedy resetować", "When to reset"),
+    ("Reset licznika", "Meter reset"),
     (
-        "Poza walką oznacza, że przez ustawiony czas nie trafiłeś żadnego wroga.",
-        "Out of combat means you haven't hit an enemy for the time set below.",
+        "Automatyczny: licznik zeruje się, gdy przez podany czas nikogo nie trafisz."
+        " Tylko klawiszem: zeruje go tylko klawisz resetu, domyślnie F6.",
+        "Automatic: the meter goes back to zero once you haven't hit anything for the time below."
+        " Only with the key: just the reset key does that, F6 by default.",
     ),
 )
 reset_seconds = label(
     SliderOption(identifier="Reset After Seconds", value=5.0, min_value=1.0, max_value=60.0, step=1.0, is_integer=False),
-    ("Reset po tylu sekundach poza walką", "Reset after this many seconds out of combat"),
-    ("Tyle sekund bez trafienia kończy walkę.", "This many seconds without a hit ends the fight."),
+    ("Reset po (sekundy)", "Reset after (seconds)"),
+    ("Po tylu sekundach bez trafienia licznik się zeruje.", "The meter resets after this many seconds without a hit."),
 )
-only_health_removed = label(
-    BoolOption("Only Health Removed", False),
-    ("Tylko zabrane zdrowie", "Only health removed"),
-    (
-        "Wyłączone: liczy pełne obrażenia, takie jak liczby na ekranie. Włączone: liczy tylko zdrowie, które"
-        " wróg faktycznie stracił, więc ostatnie trafienie liczy się częściowo, a manekin treningowy prawie wcale.",
-        "Off: counts the full damage, like the numbers on screen. On: counts only the health the enemy really"
-        " lost, so the last hit counts in part, and a training dummy hardly at all.",
-    ),
-)
+reset_seconds.greyed_when = lambda: when_to_reset.key != RESET_AFTER_IDLE
 count_over_time = label(
     BoolOption("Count Damage Over Time", True),
-    ("Licz obrażenia w czasie", "Count damage over time"),
-    ("Podpalenie, korozja i podobne.", "Burning, corrosion and the like."),
+    ("Obrażenia w czasie", "Damage over time"),
+    ("Podpalenie, korozja i podobne.", "Burning, corrosion and so on."),
 )
 count_companions = label(
     BoolOption("Count Companions", True),
-    ("Licz towarzyszy", "Count companions"),
+    ("Obrażenia towarzyszy", "Companion damage"),
     (
-        "Liczy trafienia przypisane przez grę Twojej postaci, ale zadane przez coś innego, na przykład przywołańca.",
-        "Counts hits the game credits to your character but which something else dealt, like a summon.",
+        "Trafienia, które gra zalicza Twojej postaci, ale zadało je coś innego, np. przywołaniec.",
+        "Hits the game credits to your character but something else dealt, like a summon.",
     ),
 )
 show_window = label(
     BoolOption("Show Window", True),
-    ("Pokazuj okienko", "Show the window"),
-    ("Okienko z DPS na ekranie.", "The DPS window on screen."),
+    ("Pokazuj licznik", "Show the meter"),
+    ("Po wyłączeniu licznik znika z ekranu, ale liczy dalej.", "Turned off, it leaves the screen but keeps counting."),
 )
 show_details = label(
     BoolOption("Show Details", True),
-    ("Pokazuj szczegóły", "Show details"),
+    ("Szczegóły", "Details"),
     ("Suma obrażeń, czas, krytyki, najlepsze trafienie i zabójstwa.", "Total damage, time, crits, best hit and kills."),
 )
 show_last_fight = label(
     BoolOption("Show Last Fight", True),
-    ("Pokazuj ostatnią walkę", "Show the last fight"),
-    (
-        "Po resecie zostaje wynik poprzedniej walki, żeby dało się go odczytać.",
-        "After a reset, the previous fight's result stays, so it can still be read.",
-    ),
+    ("Ostatnia walka", "Last fight"),
+    ("Wynik poprzedniej walki pod licznikiem.", "The previous fight's result under the meter."),
 )
 window_x = label(
     SliderOption(identifier="Window X", value=98.5, min_value=0.0, max_value=100.0, step=0.5, is_integer=False),
-    ("Pozycja w poziomie (%)", "Horizontal position (%)"),
+    ("Pozycja w poziomie", "Horizontal position"),
     ("0 to lewa krawędź ekranu, 100 prawa.", "0 is the left edge of the screen, 100 the right."),
 )
 window_y = label(
     SliderOption(identifier="Window Y", value=26.0, min_value=0.0, max_value=100.0, step=0.5, is_integer=False),
-    ("Pozycja w pionie (%)", "Vertical position (%)"),
+    ("Pozycja w pionie", "Vertical position"),
     ("0 to góra ekranu, 100 dół.", "0 is the top of the screen, 100 the bottom."),
 )
 font_size = label(
     SliderOption(identifier="Font Size", value=28, min_value=10, max_value=48, step=1),
-    ("Rozmiar DPS", "DPS size"),
+    ("Rozmiar", "Size"),
     ("Wielkość głównej liczby. Szczegóły są mniejsze.", "The size of the main number. The details are smaller."),
 )
 STYLE_GAME = "game"
@@ -252,15 +236,18 @@ window_style = label(
             STYLE_NEON: ("Neon", "Neon"),
         },
     ),
-    ("Styl okienka", "Window style"),
+    ("Styl", "Style"),
     (
-        "Jak w grze: kolory i wielkie litery interfejsu gry. Kompaktowy: to samo, ale szczegóły w jednej linii."
-        " Sam tekst: bez tła. Neon: mocne, jasne kolory.",
-        "Like the game: the game's interface colours and capitals. Compact: the same, with the details on one line."
-        " Text only: no background. Neon: strong, bright colours.",
+        "Jak w grze: kolory interfejsu gry. Kompaktowy: to samo, ale szczegóły w jednej linii."
+        " Sam tekst: bez tła. Neon: jasne kolory.",
+        "Like the game: the game's interface colours. Compact: the same, with the details on one line."
+        " Text only: no background. Neon: bright colours.",
     ),
 )
 RELOAD_OPTIONS = (window_x, window_y, font_size)
+WINDOW_OPTIONS = (window_style, show_details, show_last_fight, window_x, window_y, font_size)
+for option in WINDOW_OPTIONS:
+    option.greyed_when = lambda: not show_window.value
 
 # --- What the game tells us -----------------------------------------------------------------------
 HOSTILE = 2  # ETeamAttitude
@@ -357,10 +344,6 @@ def record_hit(args: WrappedStruct) -> None:
         if not count_companions.value and POINTER_AT(raw, offsets["damageinstigator"])[0] != bound_address:
             return
         amount = FLOAT_AT(raw, offsets["damage"])[0]
-        if only_health_removed.value:
-            over = FLOAT_AT(raw, offsets["overkilldamage"])[0]
-            if over > 0:
-                amount -= over
         if not amount > 0:  # Also catches NaN
             return
         if not count_over_time.value and is_over_time(raw, args):
@@ -717,15 +700,6 @@ def reset_meter() -> None:
     info(f"{LOG_TAG} Reset")
 
 
-@keybind("Toggle Window")
-def toggle_window() -> None:
-    global last_widget_check  # noqa: PLW0603
-
-    show_window.value = not show_window.value
-    mod.save_settings()
-    last_widget_check = 0.0
-
-
 def on_disable() -> None:
     stop_listening()
     remove_window()
@@ -766,11 +740,6 @@ label(
     ("Resetuj licznik", "Reset the meter"),
     ("Kończy walkę od razu. Przydatne przy liczeniu tylko ręcznie.", "Ends the fight straight away. Handy when only resetting by hand."),
 )
-label(
-    toggle_window,
-    ("Pokaż lub ukryj okienko", "Show or hide the window"),
-    ("Włącza i wyłącza okienko z DPS.", "Turns the DPS window on and off."),
-)
 language_option = label(
     localized_spinner("Language", LANGUAGE_AUTO, LANGUAGE_LABELS),
     ("Język / Language", "Język / Language"),
@@ -782,8 +751,8 @@ language_option = label(
 language_option.after_change = apply_language
 
 MOD_DESCRIPTION: Text = (
-    "Licznik DPS: pokazuje na ekranie, ile obrażeń na sekundę zadajesz.",
-    "DPS meter: shows on screen how much damage per second you're dealing.",
+    "Pokazuje na ekranie, ile obrażeń na sekundę zadajesz.",
+    "Shows on screen how much damage per second you're dealing.",
 )
 
 
@@ -800,22 +769,13 @@ mod = build_mod(
         window_seconds,
         when_to_reset,
         reset_seconds,
-        submenu(
-            "What Counts",
-            [only_health_removed, count_over_time, count_companions],
-            ("Co się liczy", "What counts"),
-            ("Które obrażenia wliczać do DPS.", "Which damage goes into the DPS."),
-        ),
+        count_over_time,
+        count_companions,
         submenu(
             "Window",
-            [show_window, window_style, show_details, show_last_fight, window_x, window_y, font_size],
-            ("Okienko", "Window"),
-            ("Co okienko pokazuje i gdzie.", "What the window shows, and where."),
-        ),
-        label(
-            ButtonOption("Reset Now", on_press=lambda _: reset_meter()),
-            ("Resetuj teraz", "Reset now"),
-            ("Kończy walkę od razu.", "Ends the fight straight away."),
+            [show_window, *WINDOW_OPTIONS],
+            ("Wygląd licznika", "Meter display"),
+            ("Styl, szczegóły i miejsce na ekranie.", "Style, details and position."),
         ),
     ],
 )
