@@ -1,0 +1,10 @@
+[project]
+name = "Bl4DpsMeter"
+version = "1.0"
+description = "DPS meter: shows on screen how much damage per second you're dealing."
+
+[tool.sdkmod]
+name = "Borderlands 4 DPS Meter"
+download = "https://github.com/RZADALSON/borderlands-4-dps-meter/releases"
+license = { name = "GPL3", url = "https://choosealicense.com/licenses/gpl-3.0/" }
+coop_support = "ClientSide"

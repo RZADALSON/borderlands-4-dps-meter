@@ -1,0 +1,52 @@
+Borderlands 4 DPS Meter
+
+Ten instalator kopiuje do folderu gry pakiet od kilku autorów. Żaden plik samej gry nie jest
+rozpowszechniany ani zmieniany.
+
+
+Co zawiera
+
+Borderlands 4 DPS Meter
+  Licznik obrażeń na sekundę. Licencja GPL-3.0.
+  Kod źródłowy jest w sdk_mods\Bl4DpsMeter.sdkmod (to zwykłe archiwum ZIP).
+  Sposób odczytu obrażeń (native.py) pochodzi z Carnage Meter z bl4-fix (flameaway, GPL-3.0):
+  https://github.com/flameaway/bl4-fix
+
+Oak2 Mod Manager v0.3, z unrealsdk i pyunrealsdk (bl-sdk). Licencja LGPL-3.0.
+  https://github.com/bl-sdk/oak2-mod-manager
+
+BL4 Mod Menu (flameaway). Licencja GPL-3.0.
+  Kod źródłowy jest w sdk_mods\bl4_mod_menu.sdkmod oraz na stronie:
+  https://github.com/flameaway/bl4-fix
+  Zmieniona wersja: poprawiony pasek przewijania w ui\menu.js (30.10.2026).
+
+Python 3.14 (Python Software Foundation). Licencja PSF, plik Python-LICENSE.txt.
+
+Microsoft Visual C++ Redistributable
+  Instaluje się osobno, tylko gdy go brakuje, na warunkach licencji Microsoftu.
+
+
+Teksty licencji są w tym folderze. Oprogramowanie jest dostarczane bez żadnej gwarancji.
+Nie jest to produkt firmy Gearbox ani 2K.
+
+
+Odinstalowanie
+
+Ustawienia Windows, Zainstalowane aplikacje, Borderlands 4 DPS Meter.
+Twoje ustawienia modów i mody doinstalowane osobno zostają w folderze sdk_mods. SDK i menu modów
+zostają też, jeśli masz zainstalowany Borderlands 4 Loot Filter.
+
+
+English
+
+This installer copies a bundle from several authors into the game's folder. No file of the game
+itself is distributed or changed. The list above says what's in it, under which licence, and where
+its source is. Borderlands 4 DPS Meter is GPL-3.0, its source is in sdk_mods\Bl4DpsMeter.sdkmod, a plain
+ZIP archive. How it reads damage (native.py) comes from Carnage Meter in bl4-fix (flameaway, GPL-3.0).
+Oak2 Mod Manager is LGPL-3.0, BL4 Mod Menu is GPL-3.0 and was changed to fix its scrollbar in
+ui\menu.js (30 Oct 2026), and Python is under the PSF licence. The software comes with no warranty,
+and isn't a product of Gearbox or 2K.
+
+To uninstall: Windows Settings, Installed apps, Borderlands 4 DPS Meter. Your mod settings and any mods you added
+yourself stay in the sdk_mods folder. The SDK and mod menu also stay if you have Borderlands 4 Loot
+Filter installed.
