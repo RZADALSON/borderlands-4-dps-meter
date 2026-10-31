@@ -90,7 +90,7 @@ def near(label, got, want):
     check(label, abs(got - want) < 1e-6, True) if abs(got - want) < 1e-6 else check(label, got, want)
 
 mod = mods_base.mod_list.mod_list[-1]
-check("name", mod.name, "Borderlands 4 DPS Meter"); check("version", mod.version, "1.2"); check("coop", mod.coop_support.name, "ClientSide")
+check("name", mod.name, "Borderlands 4 DPS Meter"); check("version", mod.version, "1.2.1"); check("coop", mod.coop_support.name, "ClientSide")
 check("keybinds", sorted(k.identifier for k in mod.keybinds), ["Reset Meter"])
 check("reset key", next(k.key for k in mod.keybinds if k.identifier == "Reset Meter"), "F6")
 check("both hooks", sorted(h.hook_funcs[0][0] for h in mod.hooks), sorted([m.native.FUNC_PATH, "/Script/Engine.CameraModifier:BlueprintModifyCamera"]))
@@ -217,8 +217,7 @@ got = build(m.STYLE_COMPACT); check("changing style rebuilds", got.built, True);
 got = build(m.STYLE_MINIMAL); check("text only has a clear background", got.colors[0].A, 0.0); check("and a shadow on both texts", got.shadows, 2); check("not in capitals", m.details_text(0.0).split(" ")[0] in ("Razem", "Total"), True)
 got = build(m.STYLE_NEON); check("neon has a line", len(got.colors), 2); check("neon main colour", got.main.G, m.GAME_CYAN[1]); check("neon has no shadow", got.shadows, 0)
 got = build(m.STYLE_GAME); check("game has orange ends", got.colors.count(next(c for c in got.colors if c.R == m.GAME_ORANGE[0])) >= 1, True); check("on the HUD's blue", any(c.A == m.HUD_PANEL[3] for c in got.colors), True); check("game has no shadow", got.shadows, 0)
-def shear(): return next(a[0].Y for w in W.made for n, a in w.calls if n == "SetRenderShear")
-check("leans down on the right", shear(), m.HUD_TILT); W.made.clear(); m.window_x.value = 10.0; m.check_window(THE_PC); check("and up on the left", shear(), -m.HUD_TILT); m.window_x.value = m.window_x.default_value; m.check_window(THE_PC)
+check("no tilt", any(n == "SetRenderShear" for w in W.made for n, _ in w.calls), False)
 W.made.clear(); m.check_window(THE_PC); check("same style, not rebuilt", W.made, [])
 m.window_style.value = "Sam tekst"; check("style by its text", m.window_style.key, m.STYLE_MINIMAL); m.language_option.value = m.ENGLISH; check("reads in English", m.window_style.value, "Text only"); m.window_style.value = m.STYLE_GAME; check("default again", m.window_style.value, "Like the game")
 

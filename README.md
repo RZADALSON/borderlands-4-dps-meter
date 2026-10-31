@@ -1,5 +1,7 @@
 # Borderlands 4 DPS Meter
 
+**This is now part of [Vault Hunter Tools](https://github.com/RZADALSON/borderlands-4-vault-hunter-tools), get it there.** Its installer replaces this app.
+
 Shows your damage per second in a small window while you play. Comes with an installer, so you don't need to set up the Python SDK yourself.
 
 [Polski opis](README.pl.md)

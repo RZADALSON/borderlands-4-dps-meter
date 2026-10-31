@@ -1,6 +1,6 @@
 [project]
 name = "Bl4DpsMeter"
-version = "1.2"
+version = "1.2.1"
 description = "DPS meter: shows on screen how much damage per second you're dealing."
 
 [tool.sdkmod]

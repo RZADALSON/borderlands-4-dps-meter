@@ -431,7 +431,7 @@ class WindowStyle:
     capitals: bool = False
     one_line: bool = False
     shadow: bool = False
-    panel: bool = False  # Built like the game's own HUD panels, slightly tilted
+    panel: bool = False  # Built like the game's own HUD panels
 
 
 # The game's interface colours, as the Carnage Report takes them from its stylesheets
@@ -448,7 +448,6 @@ HUD_EDGE = linear("#aebfc8")
 HUD_CYAN = linear("#39e3ea")
 HUD_NUMBER = linear("#f0e8dc")
 HUD_DETAILS = linear("#b4c8d2")
-HUD_TILT = 4.0  # Degrees, about what those panels lean by
 HUD_TICK_LENGTH = 18.0
 HUD_LINE_WIDTH = 2.0
 WINDOW_STYLES = {
@@ -650,11 +649,8 @@ def build_window(pc: UObject) -> None:
     column = new_widget("/Script/UMG.VerticalBox", tree)
     box.SetContent(column)
 
-    # They lean away from the middle of the screen on either side
     if style.panel:
-        on_right = window_x.value >= 50.0  # noqa: PLR2004
-        box.SetRenderShear(make_struct("Vector2D", X=0.0, Y=HUD_TILT if on_right else -HUD_TILT))
-        main_label, details_label = build_panel(tree, column, style, on_right)
+        main_label, details_label = build_panel(tree, column, style, window_x.value >= 50.0)  # noqa: PLR2004
 
     # A thin line along the top
     if style.accent is not None:

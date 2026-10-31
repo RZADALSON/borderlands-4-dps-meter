@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.2.0
+## 1.2.1
 
-- The default style now looks like the panels on the game's HUD, slightly tilted like them.
+- The default style now looks like the panels on the game's HUD.
 
 ## 1.1.0
 
